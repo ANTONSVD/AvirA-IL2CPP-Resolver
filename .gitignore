@@ -1,0 +1,12 @@
+out/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.log
+*.tlog
+*.lastbuildstate
+*.user
+.vs/
+*.lib
+*.exp
