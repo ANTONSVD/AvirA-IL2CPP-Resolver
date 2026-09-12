@@ -17,7 +17,7 @@ namespace AvirA
 		C_Api* Api() const;
 
 		C_Class Class() const;
-		C_Object* Object() const;
+		C_Object Object() const;
 		std::string Name() const;
 		int Kind() const;
 		u32 Attrs() const;

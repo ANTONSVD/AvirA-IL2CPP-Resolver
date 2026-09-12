@@ -286,24 +286,24 @@ namespace AvirA
 		return C_Type(m_api, m_api->ClassGetType(m_raw));
 	}
 
-	C_Object* C_Class::SystemObject() const
+	C_Object C_Class::SystemObject() const
 	{
 		C_Type type = Type();
 		if (!type.Valid())
-			return nullptr;
+			return C_Object();
 		return type.Object();
 	}
 
-	C_Object* C_Class::Create() const
+	C_Object C_Class::Create() const
 	{
 		if (!Valid() || !m_api->ObjectNew)
-			return nullptr;
+			return C_Object();
 		RawObject* obj = m_api->ObjectNew(m_raw);
 		if (!obj)
-			return nullptr;
+			return C_Object();
 		if (m_api->ObjectInit)
 			m_api->ObjectInit(obj);
-		return (C_Object*)obj;
+		return C_Object(m_api, obj);
 	}
 
 	u32 C_Class::GenericArgCount() const

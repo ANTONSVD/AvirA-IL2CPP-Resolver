@@ -34,7 +34,7 @@ namespace AvirA
 		C_Class Parent() const;
 
 		void* Address(C_Object* obj) const;
-		RawObject* Boxed(C_Object* obj) const;
+		C_Object Boxed(C_Object* obj) const;
 
 		template <typename T>
 		T Get(C_Object* obj) const;

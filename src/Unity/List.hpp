@@ -17,6 +17,7 @@ namespace AvirA
 		C_Array<T> Items() const;
 		T At(int index) const;
 		T At(int index, const T& fallback) const;
+		C_Object AtObj(int index) const;
 
 	private:
 		C_Object* m_obj = nullptr;
@@ -80,5 +81,13 @@ namespace AvirA
 		if (index < 0)
 			return fallback;
 		return Items().Get((u32)index, fallback);
+	}
+
+	template <typename T>
+	C_Object C_List<T>::AtObj(int index) const
+	{
+		if (index < 0)
+			return C_Object();
+		return Items().GetObj((u32)index);
 	}
 }

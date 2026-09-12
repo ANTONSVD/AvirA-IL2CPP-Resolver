@@ -95,10 +95,10 @@ namespace AvirA
 		return (u8*)obj->Raw() + Offset();
 	}
 
-	RawObject* C_Field::Boxed(C_Object* obj) const
+	C_Object C_Field::Boxed(C_Object* obj) const
 	{
 		if (!Valid() || !obj || !obj->Valid() || !m_api->FieldGetValueObject)
-			return nullptr;
-		return m_api->FieldGetValueObject((RawField*)m_raw, obj->Raw());
+			return C_Object();
+		return C_Object(m_api, m_api->FieldGetValueObject((RawField*)m_raw, obj->Raw()));
 	}
 }

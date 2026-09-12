@@ -1,4 +1,5 @@
 #pragma once
+#include <excpt.h>
 #include "Class.hpp"
 #include "Method.hpp"
 #include "Field.hpp"
@@ -20,7 +21,7 @@ namespace AvirA
 	template <typename TRet, typename... TArgs>
 	TRet C_Class::Call(C_Object* obj, const char* method, int args, TArgs... targs) const
 	{
-		using Fn = TRet(*)(C_Object*, TArgs...);
+		using Fn = TRet(*)(RawObject*, TArgs...);
 		Fn function = Resolve<Fn>(method, args);
 		if (!function)
 		{
@@ -29,10 +30,11 @@ namespace AvirA
 			else
 				return TRet{};
 		}
+		RawObject* instance = (obj && obj->Valid()) ? obj->Raw() : nullptr;
 		if constexpr (std::is_void_v<TRet>)
-			function(obj, targs...);
+			function(instance, targs...);
 		else
-			return function(obj, targs...);
+			return function(instance, targs...);
 	}
 
 	template <typename T, typename... TArgs>
@@ -106,26 +108,26 @@ namespace AvirA
 	T C_Property::Get(C_Object* obj) const
 	{
 		C_Method getter = Getter();
-		if (!getter.Valid() || !obj)
+		if (!getter.Valid() || !obj || !obj->Valid())
 			return T{};
-		using Fn = T(*)(C_Object*);
+		using Fn = T(*)(RawObject*);
 		Fn function = getter.Pointer<Fn>();
 		if (!function)
 			return T{};
-		return function(obj);
+		return function(obj->Raw());
 	}
 
 	template <typename T>
 	void C_Property::Set(C_Object* obj, const T& value) const
 	{
 		C_Method setter = Setter();
-		if (!setter.Valid() || !obj)
+		if (!setter.Valid() || !obj || !obj->Valid())
 			return;
-		using Fn = void(*)(C_Object*, T);
+		using Fn = void(*)(RawObject*, T);
 		Fn function = setter.Pointer<Fn>();
 		if (!function)
 			return;
-		function(obj, value);
+		function(obj->Raw(), value);
 	}
 
 	template <typename T>
@@ -261,6 +263,36 @@ namespace AvirA
 			u8 key = *base;
 			i32 coded = *(i32*)&value ^ key;
 			*(i32*)(base + sizeof(u8)) = coded;
+		}
+	}
+
+	template <typename T>
+	T C_Object::GetAt(size_t offset) const
+	{
+		T out{};
+		if (!Valid())
+			return out;
+		__try
+		{
+			memcpy(&out, (u8*)m_raw + offset, sizeof(T));
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+		}
+		return out;
+	}
+
+	template <typename T>
+	void C_Object::SetAt(size_t offset, const T& value) const
+	{
+		if (!Valid())
+			return;
+		__try
+		{
+			memcpy((u8*)m_raw + offset, &value, sizeof(T));
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
 		}
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Api.hpp"
+#include "Object.hpp"
 
 namespace AvirA
 {
@@ -19,6 +20,7 @@ namespace AvirA
 		T Get(u32 index) const;
 		T Get(u32 index, const T& fallback) const;
 		bool Set(u32 index, const T& value) const;
+		C_Object GetObj(u32 index) const;
 		T operator[](u32 index) const;
 
 	private:
@@ -99,6 +101,17 @@ namespace AvirA
 			return false;
 		data[index] = value;
 		return true;
+	}
+
+	template <typename T>
+	C_Object C_Array<T>::GetObj(u32 index) const
+	{
+		T* data = Data();
+		if (!data || index >= Length())
+			return C_Object();
+		RawObject* raw = nullptr;
+		memcpy(&raw, (u8*)data + (size_t)index * sizeof(T), sizeof(RawObject*));
+		return C_Object(m_api, raw);
 	}
 
 	template <typename T>

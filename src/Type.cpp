@@ -36,11 +36,11 @@ namespace AvirA
 		return C_Class(m_api, m_api->TypeGetClass(m_raw));
 	}
 
-	C_Object* C_Type::Object() const
+	C_Object C_Type::Object() const
 	{
 		if (!Valid() || !m_api->TypeGetObject)
-			return nullptr;
-		return (C_Object*)m_api->TypeGetObject(m_raw);
+			return C_Object();
+		return C_Object(m_api, m_api->TypeGetObject(m_raw));
 	}
 
 	std::string C_Type::Name() const

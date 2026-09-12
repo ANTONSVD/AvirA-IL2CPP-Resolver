@@ -21,7 +21,14 @@ namespace AvirA
 
 		C_Class Class() const;
 		C_Field Field(const char* name) const;
+		C_Object GetObj(const char* name) const;
 		u32 Size() const;
+
+		template <typename T>
+		T GetAt(size_t offset) const;
+
+		template <typename T>
+		void SetAt(size_t offset, const T& value) const;
 
 		template <typename T>
 		T Get(const char* name) const;

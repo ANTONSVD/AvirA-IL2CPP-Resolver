@@ -17,6 +17,7 @@ namespace AvirA
 		bool TryGet(const TKey& key, TValue& value) const;
 		TValue Get(const TKey& key) const;
 		TValue Get(const TKey& key, const TValue& fallback) const;
+		C_Object GetObj(const TKey& key) const;
 
 	private:
 		C_Object* m_obj = nullptr;
@@ -86,5 +87,18 @@ namespace AvirA
 		if (!TryGet(key, value))
 			return fallback;
 		return value;
+	}
+
+	template <typename TKey, typename TValue>
+	C_Object C_Dictionary<TKey, TValue>::GetObj(const TKey& key) const
+	{
+		TValue value{};
+		if (!TryGet(key, value))
+			return C_Object();
+		RawObject* raw = nullptr;
+		memcpy(&raw, &value, sizeof(RawObject*));
+		if (!Valid())
+			return C_Object();
+		return C_Object(m_obj->Api(), raw);
 	}
 }

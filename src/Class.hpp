@@ -56,8 +56,8 @@ namespace AvirA
 		std::vector<C_Class> Interfaces() const;
 
 		C_Type Type() const;
-		C_Object* SystemObject() const;
-		C_Object* Create() const;
+		C_Object SystemObject() const;
+		C_Object Create() const;
 
 		u32 GenericArgCount() const;
 		C_Class GenericArgAt(u32 index) const;

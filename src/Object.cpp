@@ -52,6 +52,34 @@ namespace AvirA
 		return klass.Field(name);
 	}
 
+	C_Object C_Object::GetObj(const char* name) const
+	{
+		if (!Valid() || !name)
+			return C_Object();
+		C_Field field = Field(name);
+		if (field.Valid() && !field.IsStatic())
+		{
+			void* address = field.Address((C_Object*)this);
+			if (!address)
+				return C_Object();
+			return C_Object(m_api, *(RawObject**)address);
+		}
+		C_Class klass = Class();
+		if (!klass.Valid())
+			return C_Object();
+		C_Property property = klass.Property(name);
+		if (!property.Valid())
+			return C_Object();
+		C_Method getter = property.Getter();
+		if (!getter.Valid())
+			return C_Object();
+		using Fn = RawObject*(*)(RawObject*);
+		Fn function = getter.Pointer<Fn>();
+		if (!function)
+			return C_Object();
+		return C_Object(m_api, function(m_raw));
+	}
+
 	u32 C_Object::Size() const
 	{
 		if (!Valid() || !m_api->ObjectGetSize)

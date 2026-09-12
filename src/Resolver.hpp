@@ -46,8 +46,8 @@ namespace AvirA
 		void* Overload(C_Class klass, const char* method, const std::vector<std::string>& params) const;
 		C_Class Inflate(C_Class base, const std::vector<C_Class>& args);
 
-		C_Object* NewObject(C_Class klass) const;
-		C_Object* Box(C_Class klass, void* data) const;
+		C_Object NewObject(C_Class klass) const;
+		C_Object Box(C_Class klass, void* data) const;
 		C_String NewString(const char* text) const;
 		C_String NewStringLen(const char* text, u32 length) const;
 
@@ -61,7 +61,7 @@ namespace AvirA
 		void* Icall(const char* name) const;
 		void GcCollect(int generations = 0) const;
 		u32 Pin(C_Object* obj) const;
-		C_Object* PinnedTarget(u32 handle) const;
+		C_Object PinnedTarget(u32 handle) const;
 		void Unpin(u32 handle) const;
 
 		u64 ModuleBase() const;

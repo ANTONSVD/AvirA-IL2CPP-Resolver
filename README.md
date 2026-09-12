@@ -52,13 +52,15 @@ bool Startup()
 Главная фишка это резолв метода в одну строку. Объявляешь тип функции, получаешь указатель, вызываешь как обычную функцию:
 
 ```cpp
-using IsAliveFn = bool(*)(AvirA::C_Object*);
+using IsAliveFn = bool(*)(AvirA::RawObject*);
 
 IsAliveFn IsAlive = Resolver.Function<IsAliveFn>(
     "Assembly-CSharp", "", "CharacterClassManager", "get_IsAlive", 0);
 
-bool Alive = IsAlive(LocalPlayer);
+bool Alive = IsAlive(LocalPlayer->Raw());
 ```
+
+`C_Object` это вид на объект игры, а не сам объект, поэтому в прямые вызовы передается `Raw()`. Все обертки вида `Call` и `Get` разворачивают его сами, руками это нужно только для тайпдефов.
 
 Порядок аргументов: сборка, неймспейс, класс, метод, число параметров. Число параметров можно не указывать, по умолчанию стоит -1, это значит любой. Пустой неймспейс это просто `""`.
 
@@ -109,7 +111,7 @@ AvirA::C_Class Inventory = PlayerClass.Nested("Inventory");
 AvirA::C_Method Update = PlayerClass.Method("Update");
 void* Pointer = Update.Pointer();
 
-using UpdateFn = void(*)(AvirA::C_Object*);
+using UpdateFn = void(*)(AvirA::RawObject*);
 UpdateFn Fn = PlayerClass.Resolve<UpdateFn>("Update", 0);
 ```
 
@@ -197,13 +199,13 @@ Player->Set("health", 100);
 
 ```cpp
 AvirA::C_Property Transform = PlayerClass.Property("transform");
-AvirA::C_Object* T = Transform.Get<AvirA::C_Object*>(Player);
+AvirA::C_Object T = Player->GetObj("transform");
 ```
 
-Указатели читаются так же, через шаблон:
+Объекты читаются через `GetObj`, он возвращает вид по значению:
 
 ```cpp
-AvirA::C_Object* Model = Player->Get<AvirA::C_Object*>("MyModel");
+AvirA::C_Object Model = Player->GetObj("MyModel");
 AvirA::Vector3 Pos = Player->Get<AvirA::Vector3>("position");
 ```
 
@@ -230,7 +232,7 @@ for (AvirA::C_Field F : PlayerClass.Fields())
 Статика читается и пишется в одну строку:
 
 ```cpp
-AvirA::C_Object* Instance = Resolver.Static<AvirA::C_Object*>(
+AvirA::RawObject* Instance = Resolver.Static<AvirA::RawObject*>(
     "Assembly-CSharp", "", "PlayerHandler", "Instance");
 
 Resolver.SetStatic("Assembly-CSharp", "", "PlayerHandler", "Instance", Instance);
@@ -240,7 +242,7 @@ Resolver.SetStatic("Assembly-CSharp", "", "PlayerHandler", "Instance", Instance)
 
 ```cpp
 AvirA::C_Field Inst = PlayerClass.Field("Instance");
-AvirA::C_Object* P = Inst.Static<AvirA::C_Object*>();
+AvirA::RawObject* P = Inst.Static<AvirA::RawObject*>();
 Inst.SetStatic(P);
 ```
 
@@ -249,11 +251,11 @@ Inst.SetStatic(P);
 Статический метод вызывается как обычно, только объект не передается:
 
 ```cpp
-using GetLocalFn = AvirA::C_Object*(*)();
+using GetLocalFn = AvirA::RawObject*(*)();
 GetLocalFn GetLocal = Resolver.Function<GetLocalFn>(
     "Assembly-CSharp", "", "ReferenceHub", "get_LocalHub", 0);
 
-AvirA::C_Object* Local = GetLocal();
+AvirA::C_Object Local(Resolver.Api(), GetLocal());
 ```
 
 ## Обобщения (генерики)
@@ -282,15 +284,15 @@ AvirA::C_Class Arg = IntList.GenericArgAt(0);
 Создать объект класса, конструктор вызовется сам:
 
 ```cpp
-AvirA::C_Object* Obj = PlayerClass.Create();
+AvirA::C_Object Obj = PlayerClass.Create();
 ```
 
 Упаковать значимый тип в объект и распаковать обратно:
 
 ```cpp
 int Value = 5;
-AvirA::C_Object* Boxed = Resolver.Box(IntClass, &Value);
-int Back = Boxed->Unbox<int>();
+AvirA::C_Object Boxed = Resolver.Box(IntClass, &Value);
+int Back = Boxed.Unbox<int>();
 ```
 
 Строки:
@@ -308,17 +310,21 @@ int Len = S.Length();
 ```cpp
 AvirA::C_Array<AvirA::C_Object*> Items = Resolver.NewArray<AvirA::C_Object*>(ItemClass, 10);
 AvirA::u32 Count = Items.Length();
-Items.Set(0, FirstItem);
-AvirA::C_Object* Got = Items.Get(0);
+Items.Set(0, FirstItem->Raw());
+AvirA::C_Object Got = Items.GetObj(0);
 ```
+
+Для массивов с объектами бери `GetObj` вместо `Get`, он правильно завернет указатель в вид.
 
 Список `List<T>` оборачивается поверх объекта:
 
 ```cpp
-AvirA::C_List<AvirA::C_Object*> Inv(Player->Get<AvirA::C_Object*>("inventory"));
+AvirA::C_List<AvirA::C_Object*> Inv(Player->GetObj("inventory"));
 int Count = Inv.Count();
-AvirA::C_Object* First = Inv.At(0);
+AvirA::C_Object First = Inv.AtObj(0);
 ```
+
+Для списков с объектами бери `AtObj` вместо `At`, по той же причине.
 
 Словарь `Dictionary<K, V>` ходит через настоящие методы `TryGetValue` и `ContainsKey`, поэтому не зависит от версии игры:
 
@@ -327,13 +333,11 @@ AvirA::C_Dictionary<int, AvirA::C_Object*> Dict(Obj);
 int Count = Dict.Count();
 if (Dict.Contains(1))
 {
-    AvirA::C_Object* Item = Dict.Get(1);
-}
-AvirA::C_Object* Item = nullptr;
-if (Dict.TryGet(1, Item))
-{
+    AvirA::C_Object Item = Dict.GetObj(1);
 }
 ```
+
+Для словарей с объектами бери `GetObj`, обычный `Get` вернет голый указатель без обертки.
 
 Математика Unity лежит в `src/Unity/Math.hpp`: `Vector2`, `Vector3`, `Vector4`, `Quaternion`, `Color`, `Rect`, `Bounds`, `Ray`, `Matrix4x4`. У вектора есть длина, дистанция и скалярное произведение.
 
@@ -402,8 +406,8 @@ AvirA::C_Class Hidden = Resolver.FilterImage(Img, { "~_health", "-Update" });
 
 ```cpp
 void* Icall = Resolver.Icall("UnityEngine.GameObject::Internal_CreateGameObject");
-AvirA::u32 Handle = Resolver.Pin(Obj);
-AvirA::C_Object* Target = Resolver.PinnedTarget(Handle);
+AvirA::u32 Handle = Resolver.Pin(&Obj);
+AvirA::C_Object Target = Resolver.PinnedTarget(Handle);
 Resolver.Unpin(Handle);
 bool Debugged = Resolver.DebuggerAttached();
 Resolver.GcCollect();

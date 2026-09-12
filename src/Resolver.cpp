@@ -232,18 +232,18 @@ namespace AvirA
 		return out;
 	}
 
-	C_Object* C_Resolver::NewObject(C_Class klass) const
+	C_Object C_Resolver::NewObject(C_Class klass) const
 	{
 		if (!klass.Valid())
-			return nullptr;
+			return C_Object();
 		return klass.Create();
 	}
 
-	C_Object* C_Resolver::Box(C_Class klass, void* data) const
+	C_Object C_Resolver::Box(C_Class klass, void* data) const
 	{
 		if (!klass.Valid() || !data || !m_api.ValueBox)
-			return nullptr;
-		return (C_Object*)m_api.ValueBox(klass.Raw(), data);
+			return C_Object();
+		return C_Object((C_Api*)&m_api, m_api.ValueBox(klass.Raw(), data));
 	}
 
 	C_String C_Resolver::NewString(const char* text) const
@@ -318,11 +318,11 @@ namespace AvirA
 		return m_api.GcPin(obj->Raw(), true);
 	}
 
-	C_Object* C_Resolver::PinnedTarget(u32 handle) const
+	C_Object C_Resolver::PinnedTarget(u32 handle) const
 	{
 		if (!handle || !m_api.GcTarget)
-			return nullptr;
-		return (C_Object*)m_api.GcTarget(handle);
+			return C_Object();
+		return C_Object((C_Api*)&m_api, m_api.GcTarget(handle));
 	}
 
 	void C_Resolver::Unpin(u32 handle) const
