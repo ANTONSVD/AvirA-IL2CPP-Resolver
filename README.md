@@ -1,6 +1,6 @@
 # AvirA IL2CPP Resolver
 
-Легкая обертка над рантаймом IL2CPP для читов под Unity игры. Резолвишь классы, методы и поля по именам, получаешь готовые указатели на функции и вызываешь их одной строкой. Никаких сигнатур и офсетов руками.
+Обертка над рантаймом IL2CPP для читов под Unity игры. Резолвишь классы, методы и поля по именам, получаешь готовые указатели на функции и вызываешь их одной строкой. Никаких сигнатур и офсетов руками.
 
 Классы с префиксом `C_`, методы в PascalCase, файлы парами hpp/cpp, весь код в неймспейсе `AvirA`. Комментариев в коде нет специально, вся документация здесь.
 
@@ -54,8 +54,7 @@ bool Startup()
 ```cpp
 using IsAliveFn = bool(*)(AvirA::RawObject*);
 
-IsAliveFn IsAlive = Resolver.Function<IsAliveFn>(
-    "Assembly-CSharp", "", "CharacterClassManager", "get_IsAlive", 0);
+IsAliveFn IsAlive = Resolver.Function<IsAliveFn>("Assembly-CSharp", "", "CharacterClassManager", "get_IsAlive", 0);
 
 bool Alive = IsAlive(LocalPlayer->Raw());
 ```
